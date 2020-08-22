@@ -1,4 +1,4 @@
-from tkinter import*
+from tkinter import *
 import pygame
 from tkinter import filedialog
 import time
@@ -21,15 +21,16 @@ c = k.cursor()
 #FUNCTIONS
 def playtime():
     if stopped:
-        return True
+      return True
     curr=pygame.mixer.music.get_pos()/1000
     min_time=time.strftime('%M:%S',time.gmtime(curr))
     # bar.config(text=min_time)
     bar.after(1000,playtime)
-    if cursong[0]:
-      song = songs[songsl[cursong[1]]]
+    if cursong[0]: # playlist view OR default view
+      song = songs[ songsl[cursong[1]] ]
     else:
-      song = songs[list(songs.keys())[cursong[1]]]
+      song = songs[ list(songs.keys())[cursong[1]] ]
+      # songs.keys()
     mut=MP3(song)
     global song_len
     song_len=mut.info.length
@@ -37,6 +38,7 @@ def playtime():
     curr+=1
     if int(slider.get())==int(song_len):
         bar.config(text=f'{conv_time} ')
+        return True
 
     elif paused:
         pass
@@ -56,7 +58,6 @@ def playtime():
         bar.config(text=f'{min_time} of {conv_time} ')
         next_time=int(slider.get())+1
         slider.config(value=int(next_time))
-
 
 def play():
     global cursong
@@ -83,7 +84,6 @@ def play():
     pygame.mixer.music.play()
     playtime()
 
-global stopped
 stopped=False
 def stop():
 
@@ -182,11 +182,14 @@ def previous_song():
 paused=False
 
 def pause():
-    global paused
+    global paused, stopped
+    stopped = True
 
     if paused==True:
         pygame.mixer.music.unpause()
         paused=False
+        stopped = False
+        playtime()
     else:
         pygame.mixer.music.pause()
         paused=True
@@ -211,10 +214,14 @@ def deleteall_songs():
 
 def update_songs():
     global songs, songsl
+
     list_box.delete(0, END)
     # list_box_for_library.delete(0, END)
 
     for n in songs.items():
+        # ((name, path), (name2, path2))
+        # (name, path)
+        # list.insert(0, "item")
         list_box.insert(END, n[0])
 
 def slide(x):
@@ -227,7 +234,6 @@ def volume(x):
     pygame.mixer.music.set_volume(volume_slider.get())
     current_volume=pygame.mixer.music.get_volume()
     volume_label.config(text=int(current_volume * 100))
-
 
 def add_song():
     global songsl
@@ -269,14 +275,18 @@ list_box_2 = Listbox(master_frame,bg='black',fg='green',width=60,selectbackgroun
 
 
 pview = False
-cursong = None, pview
+cursong = pview, None
 songs = {}
 songsl = []
 
 #SONGS FROM MYSQL
+# name, path, title, artist, album
 c.execute("SELECT * FROM musiclist")
+# [[n,p,t,a,a], [n,p,t,a,a]]
+# [a, b]
 for song in c.fetchall():
-    songs[song[0]] = song[1]
+    # [n,p,t,a,a]
+    songs[ song[0] ] = song[1]  # {name: path, ...}
 update_songs()
 
 #BUTTONS IMAGES

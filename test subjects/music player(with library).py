@@ -21,14 +21,15 @@ c = k.cursor()
 #FUNCTIONS
 def playtime():
     if stopped:
-        return
+        return True
     curr=pygame.mixer.music.get_pos()/1000
     min_time=time.strftime('%M:%S',time.gmtime(curr))
     # bar.config(text=min_time)
     bar.after(1000,playtime)
-    curr_song=list_box.curselection()
-    song=list_box.get(ACTIVE)
-    song=f'songs/{song}'
+    if cursong[0]:
+      song = songs[songsl[cursong[1]]]
+    else:
+      song = songs[list(songs.keys())[cursong[1]]]
     mut=MP3(song)
     global song_len
     song_len=mut.info.length
@@ -41,9 +42,13 @@ def playtime():
         pass
 
     elif int(slider.get())==int(curr):
+        if stopped:
+            return True
         slider_pos=int(song_len)
         slider.config(to=slider_pos,value=int(curr))
     else:
+        if stopped:
+            return True
 
         slider_pos=int(song_len)
         slider.config(to=slider_pos,value=int(slider.get()))
@@ -54,63 +59,130 @@ def playtime():
 
 
 def play():
+    global cursong
+
+    if not pview:
+      idx = 0
+      if list_box.index(ACTIVE) >= 0:
+        idx = list_box.index(ACTIVE)
+      song=list_box.get(idx)
+      song=f'songs/{song}'
+      # bar.config(text=time.strftime('%M:%S',time.gmtime(MP3(song).info.length)))
+    else:
+      idx = 0
+      if list_box_2.index(ACTIVE) >= 0:
+        idx = list_box_2.index(ACTIVE)
+      song = "songs/{}".format(list_box_2.get(idx))
+
+    cursong = pview, idx
+
     stopped=False
     slider.config(value=0)
-    song=list_box.get(ACTIVE)
-    song=f'songs/{song}'
     bar.config(text='')
-    # bar.config(text=time.strftime('%M:%S',time.gmtime(MP3(song).info.length)))
     pygame.mixer.music.load(song)
     pygame.mixer.music.play()
     playtime()
-
 
 global stopped
 stopped=False
 def stop():
+
     bar.config(text='')
     slider.config(value=0)
     pygame.mixer.music.stop()
+    list_box.selection_clear(ACTIVE)
+    list_box_2.selection_clear(ACTIVE)
     global stopped
     stopped=True
+    playtime()
 
 def next_song():
+    global cursong
+    cursong = pview, cursong[1] + 1
+
+    if pview:
+      if cursong[1] >= len(songsl):
+        cursong[1] = len(songsl) - 1
+    else:
+      if cursong[1] >= len(songs):
+        cursong[1] = len(songs) - 1
+
+    if cursong[0]:
+      try:
+        song = songs[songsl[cursong[1]]]
+      except IndexError:
+        song = songs[songsl[0]]
+        cursong = cursong[0], 0
+
+    else:
+      try:
+        song = songs[list(songs.keys())[cursong[1]]]]
+      except IndexError:
+        song = songs[list(songs.keys())[0]]
+        cursong = cursong[0], 0
+
     bar.config(text='')
-    playtime()
-    # bar.config(text=time.strftime('%M:%S',time.gmtime(MP3(song).info.length)))
     slider.config(value=0)
-    next=list_box.curselection()
-    next=next[0]+1
-    print(next)
-    song=list_box.get(next)
-    song=f'songs/{song}'
-    pygame.mixer.music.load(song)
-    pygame.mixer.music.play()
+    # next=list_box.curselection()
+    # if pview:
+    #   next = list_box_2.curselection()
+    # if not len(next) == 0:
+    #   next=next[0]+1
+    # else:
+    #   next = 0
+    # print(next)
+    try:
+      pygame.mixer.music.load(song)
+      pygame.mixer.music.play()
+    except pygame.error:
+      pygame.mixer.music.stop()
+      pygame.mixer.music.rewind()
+
+
     list_box.selection_clear(0,END)
-    list_box.activate(next)
-    list_box.selection_set(next,last=None)
+    list_box.activate(cursong[1])
+    list_box.selection_set(cursong[1],last=None)
+    playtime()
 
 def previous_song():
+    global cursong
+    cursong = pview, cursong[1] - 1
+
+    if cursong[1] == -1:
+      cursong = cursong[0], 0
+    if cursong[0]:
+      try:
+        song = songs[songsl[cursong[1]]]
+      except IndexError:
+        song = songs[songsl[0]]
+        cursong = cursong[0], 0
+
+    else:
+      try:
+        song = songs[list(songs.keys())[cursong[1]]]
+      except IndexError:
+        song = songs[list(songs.keys())[0]]
+        cursong = cursong[0], 0
+
     bar.config(text='')
-    playtime()
-    # bar.config(text=time.strftime('%M:%S',time.gmtime(MP3(song).info.length)))
     slider.config(value=0)
-    previous=list_box.curselection()
-    previous=previous[0]-1
-    print(previous)
-    song=list_box.get(previous)
-    song=f'songs/{song}'
-    pygame.mixer.music.load(song)
-    pygame.mixer.music.play()
+    try:
+      pygame.mixer.music.load(song)
+      pygame.mixer.music.play()
+    except pygame.error:
+      pygame.mixer.music.stop()
+      pygame.mixer.music.rewind()
+
+
     list_box.selection_clear(0,END)
-    list_box.activate(previous)
-    list_box.selection_set(previous,last=None)
+    list_box.activate(cursong[1])
+    list_box.selection_set(cursong[1],last=None)
+    playtime()
 
 paused=False
 
 def pause():
     global paused
-    # paused=is_paused
 
     if paused==True:
         pygame.mixer.music.unpause()
@@ -142,19 +214,18 @@ def update_songs():
     list_box.delete(0, END)
     # list_box_for_library.delete(0, END)
 
-    for n in songs.items():
+    for n in songs.items():]
         list_box.insert(END, n[0])
 
-    # for n in songsl:
-        # list_box_for_library.insert(END, n)
+def slide(x):]
+    pygame.mixer.music.stop()
+    pygame.mixer.music.rewind()
+    pygame.mixer.music.play(start=int(slider.get()))]
 
-def slide(x):
-    pygame.mixer.music.set_pos(float(slider.get()))1
 
-
-def volume(x):
+def volume(x):]
     pygame.mixer.music.set_volume(volume_slider.get())
-    current_volume=pygame.mixer.music.get_volume()
+    current_volume=pygame.mixer.musi]c.get_volume()
     volume_label.config(text=int(current_volume * 100))
 
 
@@ -180,8 +251,6 @@ def toggleplaylist():
         pview = False
         add_songs_button.grid(row=0,column=0,padx=10)
         list_box.grid(row=0, column=0)
-        # for n in songs:
-        #     list_box.insert(END, n)
 
 #FRAMES FOR MAIN PLAYER:-
 #MASTER FRAME
@@ -200,6 +269,7 @@ list_box_2 = Listbox(master_frame,bg='black',fg='green',width=60,selectbackgroun
 
 
 pview = False
+cursong = None, pview
 songs = {}
 songsl = []
 

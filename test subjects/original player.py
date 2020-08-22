@@ -74,6 +74,9 @@ def play():
 global stopped
 stopped=False    
 def stop():
+    next_song()
+    previous_song()
+    play()
     bar.config(text='')
     slider.config(value=0)
     pygame.mixer.music.stop()
@@ -93,7 +96,6 @@ def next_song():
     list_box.selection_clear(0,END)
     list_box.activate(next)
     list_box.selection_set(next,last=None)
-    musix.music.title
     
 def previous_song():
     bar.config(text='')
@@ -142,6 +144,8 @@ def slide(x):
     song=f'D:/shrishaa/python project/songs/{song}'
     pygame.mixer.music.load(song)
     pygame.mixer.music.play(start=int(slider.get()))
+    stop()
+    play()
 
 
 def volume(x):
@@ -157,9 +161,8 @@ master_frame.pack(pady=20)
 volume_frame=LabelFrame(master_frame,text='Volume')
 volume_frame.grid(row=0,column=1,padx=20)
 
-
 #LIST BOX    
-list_box=Listbox(master_frame,bg='black',fg='green',width=70,selectbackground='gray',selectforeground='black')
+list_box=Listbox(master_frame,bg='black',fg='green',width=60,selectbackground='gray',selectforeground='black')
 list_box.grid(row=0,column=0)
 
 #BUTTONS IMAGES
